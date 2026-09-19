@@ -104,8 +104,6 @@ jobs:
 ...
 ```
 
-*(Insert Screenshot 1: Code diff / editor view of `.github/workflows/04-deploy-production.yml`)*
-
 ---
 
 #### B. Enabling Pull Request Validation in CI (`.github/workflows/01-ci.yml`)
@@ -123,7 +121,6 @@ on:
   workflow_dispatch:
 ```
 
-*(Insert Screenshot 2: Code diff / editor view of `.github/workflows/01-ci.yml`)*
 
 ---
 
@@ -140,7 +137,6 @@ The following repository variables and secrets were configured in GitHub to enab
 | **Repository Variable** | `AKS_CLUSTER_NAME` | AKS cluster name (`s225598173Week08Aks`). |
 | **Environment Secrets** | Staging & Production | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `JWT_SECRET_KEY`, `DEFAULT_ADMIN_*`, `AZURE_STORAGE_CONNECTION_STRING`. |
 
-*(Insert Screenshot 3: GitHub Settings -> Secrets and Variables -> Actions showing Secrets and Variables)*
 
 ---
 
@@ -152,16 +148,13 @@ To provide verifiable visual evidence of automated deployment:
 1. Updated `frontend/src/components/Header.jsx` to change the application title to `KoalaTech University - CD Pipeline (Task 9.3C)` and added a `Continuous Deployment v2.0` badge.
 2. Updated `frontend/src/theme.js` to change the primary brand color from default blue (`#1565C0`) to Vibrant Teal (`#00796B`) and secondary to Deep Orange (`#E65100`).
 
-*(Insert Screenshot 4: Code diff of `Header.jsx` and `theme.js`)*
+
 
 ---
 
 ### 3.2 Pull Request Submission and Merge
 
 A feature branch `feature/frontend-cd-update` was created and pushed to GitHub. A Pull Request was opened to merge the changes into `main`.
-
-*(Insert Screenshot 5: GitHub Pull Request page showing the feature branch targeting main and test status)*  
-*(Insert Screenshot 6: Pull Request successfully merged into `main`)*
 
 ---
 
@@ -174,8 +167,6 @@ Upon merging the Pull Request, the entire Continuous Deployment pipeline trigger
 3. **`03 - Test Staging`**: Automatically triggered by `workflow_run`, resolved the staging frontend external IP, and executed HTTP smoke tests.
 4. **`04 - Deploy to Production`**: Automatically triggered upon success of `03 - Test Staging`, configured the `production` namespace, and deployed the exact same tested container images without rebuild.
 
-*(Insert Screenshot 7: GitHub Actions runs dashboard showing sequential automated execution of workflows 01 -> 02 -> 03 -> 04)*  
-*(Insert Screenshot 8: Detail of `04 - Deploy to Production` showing trigger event `workflow_run` and successful rollout)*
 
 ---
 
@@ -187,9 +178,6 @@ The live application reflected:
 - The updated heading: `KoalaTech University - CD Pipeline (Task 9.3C)`
 - The new `Continuous Deployment v2.0` badge
 - The new Vibrant Teal navigation bar theme
-
-*(Insert Screenshot 9: Production frontend web application running live in the browser)*  
-*(Insert Screenshot 10: `kubectl get pods,services -n production` showing healthy running pods with matching image SHA)*
 
 ---
 
@@ -205,7 +193,6 @@ or
 terraform destroy -auto-approve
 ```
 
-*(Insert Screenshot 11: Terminal output or Azure Portal confirming successful cleanup of `koalatech-week08-rg`)*
 
 ---
 
