@@ -1,11 +1,21 @@
 name: 04 - Deploy to Production
 
 on:
+  # Automated trigger: runs automatically when Staging tests pass
+  workflow_run:
+    workflows:
+      - "03 - Test Staging"
+    types:
+      - completed
+    branches:
+      - main
+
+  # Manual trigger fallback
   workflow_dispatch:
     inputs:
       image_tag:
         description: "Tested image SHA to deploy"
-        required: true
+        required: false
         type: string
 
 jobs:
@@ -13,12 +23,29 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
 
+    # Only run if manual trigger OR if staging tests succeeded
+    if: >
+      ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+
     environment:
       name: production
 
+    env:
+      IMAGE_TAG: ${{ inputs.image_tag || github.event.workflow_run.head_sha || github.sha }}
+
     steps:
-      - name: Checkout repository
+      - name: Checkout tested commit
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.IMAGE_TAG }}
+
+      - name: Display deployment metadata
+        run: |
+          echo "=========================================="
+          echo "Starting Continuous Deployment to Production"
+          echo "Trigger Event: ${{ github.event_name }}"
+          echo "Deploying Image Tag / Commit SHA: ${{ env.IMAGE_TAG }}"
+          echo "=========================================="
 
       - name: Login to Azure
         uses: azure/login@v3
@@ -69,37 +96,37 @@ jobs:
       - name: Update frontend image
         run: |
           kubectl set image deployment/frontend \
-            frontend=${{ vars.ACR_LOGIN_SERVER }}/koalatech-frontend:${{ inputs.image_tag }} \
+            frontend=${{ vars.ACR_LOGIN_SERVER }}/koalatech-frontend:${{ env.IMAGE_TAG }} \
             -n production
 
       - name: Update user-service image
         run: |
           kubectl set image deployment/user-service \
-            user-service=${{ vars.ACR_LOGIN_SERVER }}/koalatech-user-service:${{ inputs.image_tag }} \
+            user-service=${{ vars.ACR_LOGIN_SERVER }}/koalatech-user-service:${{ env.IMAGE_TAG }} \
             -n production
 
       - name: Update student-service image
         run: |
           kubectl set image deployment/student-service \
-            student-service=${{ vars.ACR_LOGIN_SERVER }}/koalatech-student-service:${{ inputs.image_tag }} \
+            student-service=${{ vars.ACR_LOGIN_SERVER }}/koalatech-student-service:${{ env.IMAGE_TAG }} \
             -n production
 
       - name: Update lecturer-service image
         run: |
           kubectl set image deployment/lecturer-service \
-            lecturer-service=${{ vars.ACR_LOGIN_SERVER }}/koalatech-lecturer-service:${{ inputs.image_tag }} \
+            lecturer-service=${{ vars.ACR_LOGIN_SERVER }}/koalatech-lecturer-service:${{ env.IMAGE_TAG }} \
             -n production
 
       - name: Update course-service image
         run: |
           kubectl set image deployment/course-service \
-            course-service=${{ vars.ACR_LOGIN_SERVER }}/koalatech-course-service:${{ inputs.image_tag }} \
+            course-service=${{ vars.ACR_LOGIN_SERVER }}/koalatech-course-service:${{ env.IMAGE_TAG }} \
             -n production
 
       - name: Update enrollment-service image
         run: |
           kubectl set image deployment/enrollment-service \
-            enrollment-service=${{ vars.ACR_LOGIN_SERVER }}/koalatech-enrollment-service:${{ inputs.image_tag }} \
+            enrollment-service=${{ vars.ACR_LOGIN_SERVER }}/koalatech-enrollment-service:${{ env.IMAGE_TAG }} \
             -n production
 
       - name: Wait for frontend rollout
@@ -143,3 +170,14 @@ jobs:
           kubectl get pods -n production
           kubectl get services -n production
           kubectl get pvc -n production
+
+      - name: Show production frontend URL
+        run: |
+          echo "=========================================="
+          echo "Production Application Deployment Complete"
+          echo "=========================================="
+          kubectl get service frontend -n production
+          PROD_IP=$(kubectl get service frontend -n production -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          echo "Production Application External IP: $PROD_IP"
+          echo "Production Application URL: http://${PROD_IP}"
+          echo "Deployed Image Tag: ${{ env.IMAGE_TAG }}"
