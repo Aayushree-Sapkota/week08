@@ -3,10 +3,10 @@ import { createTheme } from "@mui/material/styles";
 const theme = createTheme({
   palette: {
     primary: {
-      main: "#1565C0",
+      main: "#00796B", // Vibrant Teal (Updated for Continuous Deployment Demo - Task 9.3C)
     },
     secondary: {
-      main: "#2E7D32",
+      main: "#E65100", // Vibrant Deep Orange
     },
     background: {
       default: "#f5f5f5",

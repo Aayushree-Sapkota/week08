@@ -36,15 +36,22 @@ const Header = () => {
       }}
     >
       <Toolbar>
-        <Typography
-          variant="h6"
-          sx={{
-            flexGrow: 1,
-            fontWeight: 600,
-          }}
-        >
-          KoalaTech University
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1, gap: 1.5 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 600,
+            }}
+          >
+            KoalaTech University - CD Pipeline (Task 9.3C)
+          </Typography>
+          <Chip
+            label="Continuous Deployment v2.0"
+            color="secondary"
+            size="small"
+            sx={{ fontWeight: 700, color: "white" }}
+          />
+        </Box>
 
         <Box
           sx={{
