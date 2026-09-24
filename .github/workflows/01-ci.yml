@@ -16,6 +16,34 @@ on:
 
 
 jobs:
+  # =========================================================
+  # Check and Wait for Terraform Infrastructure Workflow
+  # =========================================================
+  wait-for-terraform:
+    name: Check Terraform Workflow Status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Terraform Workflow if Running
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          WORKFLOW_NAME="00 - Terraform Infrastructure"
+          
+          echo "Checking if workflow '$WORKFLOW_NAME' is in progress..."
+          
+          while true; do
+            # Fetch any active (in_progress, queued, requested, or waiting) runs for the workflow
+            RUNS=$(gh api repos/${{ github.repository }}/actions/workflows/"$WORKFLOW_NAME"/runs \
+              --jq '.workflow_runs[] | select(.status != "completed") | .id')
+
+            if [ -z "$RUNS" ]; then
+              echo "No active '$WORKFLOW_NAME' run found. Proceeding with CI."
+              break
+            else
+              echo "Workflow '$WORKFLOW_NAME' is currently running (Run ID(s): $RUNS). Waiting 15 seconds..."
+              sleep 15
+            fi
+          done
 
   # =========================================================
   # Backend Tests

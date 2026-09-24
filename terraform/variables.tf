@@ -44,12 +44,6 @@ variable "aks_dns_prefix" {
   type        = string
 }
 
-variable "image_tag" {
-  description = "Docker Image Tag"
-  type        = string
-}
-
-
 variable "aks_node_count" {
   description = "Number of nodes in the default AKS node pool"
   type        = number
