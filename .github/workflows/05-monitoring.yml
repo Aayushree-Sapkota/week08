@@ -1,0 +1,79 @@
+name: 05 - Deploy Monitoring (Prometheus & Grafana)
+
+on:
+  workflow_run:
+    workflows:
+      - "04 - Deploy to Production"
+    types:
+      - completed
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  deploy-monitoring:
+    name: Deploy & Validate Prometheus and Grafana on AKS
+    runs-on: ubuntu-latest
+
+    if: >
+      github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Get AKS credentials
+        run: |
+          az aks get-credentials \
+            --resource-group ${{ vars.AKS_RESOURCE_GROUP }} \
+            --name ${{ vars.AKS_CLUSTER_NAME }} \
+            --overwrite-existing
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Deploy kube-prometheus-stack via Helm
+        run: |
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
+          helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
+            --namespace monitoring \
+            --create-namespace \
+            --values kubernetes/monitoring/values.yaml \
+            --wait \
+            --timeout 10m
+
+      - name: Validate Monitoring Pods and Services
+        run: |
+          echo "=========================================="
+          echo "Monitoring Namespace Pods:"
+          kubectl get pods -n monitoring
+          echo "=========================================="
+          echo "Monitoring Namespace Services:"
+          kubectl get svc -n monitoring
+          echo "=========================================="
+
+      - name: Output Grafana Dashboard Access URL
+        run: |
+          echo "Waiting for Grafana LoadBalancer External IP..."
+          for i in {1..30}; do
+            GRAFANA_IP=$(kubectl get svc kube-prometheus-stack-grafana -n monitoring -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            if [ -n "$GRAFANA_IP" ]; then
+              echo "===================================================="
+              echo "Grafana Dashboard is accessible at:"
+              echo "URL: http://${GRAFANA_IP}"
+              echo "Username: admin"
+              echo "Password: AdminPassword123!"
+              echo "===================================================="
+              exit 0
+            fi
+            echo "Waiting for external IP assignment ($i/30)..."
+            sleep 10
+          done
+          echo "Note: If external IP is still pending, use 'kubectl port-forward svc/kube-prometheus-stack-grafana 3000:80 -n monitoring'"
