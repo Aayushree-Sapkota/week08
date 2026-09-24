@@ -1,0 +1,31 @@
+# Helm values configuration for kube-prometheus-stack on AKS (Task 10.2D)
+
+grafana:
+  enabled: true
+  adminPassword: "AdminPassword123!"
+  service:
+    type: LoadBalancer
+  defaultDashboardsEnabled: true
+
+prometheus:
+  enabled: true
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    retention: 2d
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 1024Mi
+
+nodeExporter:
+  enabled: true
+
+kubeStateMetrics:
+  enabled: true
+
+alertmanager:
+  enabled: false
